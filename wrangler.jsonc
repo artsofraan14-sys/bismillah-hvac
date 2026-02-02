@@ -19,8 +19,8 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "new-prod-ac",
-			"database_id": "c038079d-8323-46f1-8796-a351444f0912",
+			"database_name": "bismillah-hvac-db",
+			"database_id": "4617115e-d802-4435-8038-e69cdfbc5d1a",
 			"migrations_dir": "drizzle"
 		}
 	],
