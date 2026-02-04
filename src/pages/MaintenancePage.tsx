@@ -508,7 +508,7 @@ export function MaintenancePage({
               <QRCodeModal
                 isOpen={showQR}
                 onClose={() => setShowQR(false)}
-                data={`${typeof window !== 'undefined' ? window.location.origin : ''}/maintenance/${selectedRecord.id}`}
+                data={`${typeof window !== 'undefined' ? window.location.origin : ''}/guest/maintenance/${selectedRecord.id}`}
                 title={selectedRecord.assetCode}
               />
               {selectedRecord.photoUrl && (

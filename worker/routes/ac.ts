@@ -106,6 +106,28 @@ const handleGetRecordById = requireSession(async (c: Context<AppBindings>) => {
     return c.json({ record: serializeAcRecord(record), history: historyRows.map(row => serializeHistoryEntry(row.entry, row.userName)) });
 });
 
+const handleGetPublicRecordById = async (c: Context<AppBindings>) => {
+    const db = getDb(c.env);
+    const id = c.req.param("id");
+    const record = await db.query.acUnits.findFirst({ where: eq(acUnits.id, id) });
+    if (!record) {
+        return c.json({ error: "Not found" }, 404);
+    }
+
+    const historyRows = await db
+        .select({ entry: acUnitHistory, userName: users.name })
+        .from(acUnitHistory)
+        .leftJoin(users, eq(acUnitHistory.userId, users.id))
+        .where(eq(acUnitHistory.acUnitId, record.id))
+        .orderBy(desc(acUnitHistory.createdAt))
+        .limit(50);
+
+    return c.json({
+        record: serializeAcRecord(record),
+        history: historyRows.map(row => serializeHistoryEntry(row.entry, row.userName)),
+    });
+};
+
 const handleCreateRecord = requireSession(async (c: Context<AppBindings>) => {
     const db = getDb(c.env);
     const user = c.get("user");
@@ -291,6 +313,7 @@ const handleUpdateRecord = requireSession(async (c: Context<AppBindings>) => {
 export const registerAcRoutes = (app: Hono<AppBindings>) => {
     app.get("/api/ac", handleGetRecords);
     app.get("/api/ac/:id", handleGetRecordById);
+    app.get("/api/public/ac/:id", handleGetPublicRecordById);
     app.post("/api/ac", handleCreateRecord);
     app.patch("/api/ac/:id", handleUpdateRecord);
 };

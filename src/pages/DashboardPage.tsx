@@ -61,7 +61,7 @@ export function DashboardPage({
   }, [navigate]);
 
   const qrData = latestRecord
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/maintenance/${latestRecord.id}`
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/guest/maintenance/${latestRecord.id}`
     : "";
 
   if (loading) {
