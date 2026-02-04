@@ -122,8 +122,14 @@ const handleGetPublicRecordById = async (c: Context<AppBindings>) => {
         .orderBy(desc(acUnitHistory.createdAt))
         .limit(50);
 
+    const site = await db.query.sites.findFirst({
+        where: eq(sites.id, record.siteId),
+        columns: { name: true },
+    });
+
     return c.json({
         record: serializeAcRecord(record),
+        siteName: site?.name ?? null,
         history: historyRows.map(row => serializeHistoryEntry(row.entry, row.userName)),
     });
 };
