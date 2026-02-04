@@ -19,7 +19,14 @@ function formatParameterLabel(key: string) {
 
 function shouldHideParameter(key: string) {
   const normalized = key.toLowerCase().trim();
-  return normalized === "tanda_tangan" || normalized.includes("signature");
+  return (
+    normalized === "tanda_tangan" ||
+    normalized.includes("signature") ||
+    normalized === "foto_url" ||
+    normalized === "photo_url" ||
+    normalized === "foto url" ||
+    normalized === "photo url"
+  );
 }
 
 export function GuestMaintenancePage() {
