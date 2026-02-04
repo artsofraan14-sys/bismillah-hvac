@@ -64,9 +64,12 @@ export function GuestMaintenancePage() {
             <DepthCard className="space-y-3 rounded-4xl p-6 text-sm text-[#3f3f3f]">
               <p className="text-xs uppercase text-(--depthui-muted)">Identitas Unit</p>
               <p className="text-lg font-semibold text-[#1f1f1f]">{record.assetCode}</p>
+              <p>ID AC: {record.id}</p>
               <p>Lokasi: {record.location}</p>
               <p>Site ID: {record.siteId}</p>
               <p>Merek: {record.brand}</p>
+              <p>Sheet: {record.sheetName ?? "-"}</p>
+              <p>Source Row: {record.sourceRowRef ?? "-"}</p>
             </DepthCard>
 
             <DepthCard className="space-y-2 rounded-4xl p-6 text-sm text-[#3f3f3f]">
@@ -85,6 +88,10 @@ export function GuestMaintenancePage() {
               <p>Suhu Keluar: {record.outletTemp ?? "-"}</p>
               <p>Ampere Kompresor: {record.compressorAmp ?? "-"}</p>
               <p>Kondisi Filter: {record.filterCondition ?? "-"}</p>
+              <p>
+                Terakhir Diperbarui:{" "}
+                {record.updatedAt ? new Date(record.updatedAt).toLocaleString("id-ID") : "-"}
+              </p>
               {record.photoUrl && (
                 <div className="pt-2">
                   <p className="mb-2 text-xs uppercase text-(--depthui-muted)">Foto Unit</p>
@@ -108,6 +115,21 @@ export function GuestMaintenancePage() {
             </DepthCard>
 
             <DepthCard className="rounded-4xl p-6">
+              <p className="text-xs uppercase text-(--depthui-muted)">Parameter Tambahan</p>
+              {record.parameters && typeof record.parameters === "object" && Object.keys(record.parameters).length > 0 ? (
+                <ul className="mt-3 space-y-1 text-sm text-[#3f3f3f]">
+                  {Object.entries(record.parameters as Record<string, unknown>).map(([key, value]) => (
+                    <li key={key}>
+                      <span className="font-semibold text-[#1f1f1f]">{key}</span>: {String(value ?? "-")}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm text-(--depthui-muted)">Tidak ada parameter tambahan.</p>
+              )}
+            </DepthCard>
+
+            <DepthCard className="rounded-4xl p-6">
               <p className="text-xs uppercase text-(--depthui-muted)">Riwayat Perubahan</p>
               {!history.length ? (
                 <p className="mt-4 text-sm text-(--depthui-muted)">Belum ada riwayat untuk unit ini.</p>
@@ -123,12 +145,59 @@ export function GuestMaintenancePage() {
                       </div>
                       {entry.changes.length > 0 && (
                         <ul className="mt-2 space-y-1 text-xs">
-                          {entry.changes.map(change => (
-                            <li key={`${entry.id}-${change.field}`}>
-                              <span className="font-semibold text-[#1f1f1f]">{change.field}</span>:{" "}
-                              {String(change.previous ?? "-")} -&gt; {String(change.current ?? "-")}
-                            </li>
-                          ))}
+                          {entry.changes.map(change => {
+                            if (change.field === "parameters") {
+                              let previousValue: Record<string, unknown> = {};
+                              let currentValue: Record<string, unknown> = {};
+                              try {
+                                if (typeof change.previous === "string") {
+                                  previousValue = JSON.parse(change.previous);
+                                }
+                              } catch {
+                                previousValue = {};
+                              }
+                              try {
+                                if (typeof change.current === "string") {
+                                  currentValue = JSON.parse(change.current);
+                                }
+                              } catch {
+                                currentValue = {};
+                              }
+
+                              const keys = Array.from(
+                                new Set([...Object.keys(previousValue), ...Object.keys(currentValue)])
+                              );
+
+                              const changedKeys = keys.filter(key => {
+                                const prev = previousValue[key];
+                                const curr = currentValue[key];
+                                return String(prev ?? "") !== String(curr ?? "");
+                              });
+
+                              if (!changedKeys.length) return null;
+
+                              return (
+                                <li key={`${entry.id}-${change.field}`}>
+                                  <div className="font-semibold text-[#1f1f1f]">Perubahan Parameter:</div>
+                                  <ul className="mt-1 space-y-1">
+                                    {changedKeys.map(key => (
+                                      <li key={`${entry.id}-${change.field}-${key}`}>
+                                        <span className="font-semibold text-[#1f1f1f]">{key}</span>:{" "}
+                                        {String(previousValue[key] ?? "-")} -&gt; {String(currentValue[key] ?? "-")}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </li>
+                              );
+                            }
+
+                            return (
+                              <li key={`${entry.id}-${change.field}`}>
+                                <span className="font-semibold text-[#1f1f1f]">{change.field}</span>:{" "}
+                                {String(change.previous ?? "-")} -&gt; {String(change.current ?? "-")}
+                              </li>
+                            );
+                          })}
                         </ul>
                       )}
                       {entry.note && <p className="mt-2 text-xs italic text-[#1f1f1f]">{entry.note}</p>}
